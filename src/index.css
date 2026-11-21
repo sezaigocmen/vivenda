@@ -1,0 +1,45 @@
+@import 'tailwindcss' source('./');
+@import '@fontsource/open-sans/300.css';
+@import '@fontsource/open-sans/400.css';
+@import '@fontsource/open-sans/500.css';
+@import '@fontsource/open-sans/600.css';
+@import '@fontsource/open-sans/700.css';
+@import './shell/shell.css';
+
+/* ───────────── Vivenda tasarım token'ları (Figma: Vivenda – "Color Palette / Typography") ───────────── */
+:root {
+  --app-bg: #ffffff;
+  --status-fg: #000;
+}
+
+@theme {
+  --color-teal: #05a8aa;        /* marka: logo, başlıklar, alt menü */
+  --color-orange: #dc602e;      /* vurgu: seçili sekme, fiyat başlıkları, Log In */
+  --color-orange-dark: #bc412b;
+  --color-beige: #f5ede4;       /* ikincil zemin: butonlar, sayaçlar */
+  --color-sage: #b8d5b8;
+  --color-ink: #000000;
+  --color-ink-soft: #2c2a28;
+  --color-muted: #949494;
+  --color-bg: #ffffff;
+  --color-nav: #f6f4f2;
+
+  --radius-card: 10px;
+
+  /* Yazı tipi: Open Sans (Light – Regular – Semibold – Bold) */
+  --font-sans: 'Open Sans', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-weight-light: 300;
+}
+
+.app-surface {
+  color: var(--color-ink);
+}
+
+/* Tek renkli SVG ikon: rengi yazı renginden alır */
+.icon {
+  display: inline-block;
+  flex-shrink: 0;
+  background-color: currentColor;
+  -webkit-mask: var(--icon) center / contain no-repeat;
+  mask: var(--icon) center / contain no-repeat;
+}
