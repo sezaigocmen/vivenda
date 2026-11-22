@@ -157,8 +157,8 @@ export function TouchCursor({ screen, scale }: { screen: RefObject<HTMLDivElemen
           style={{
             left: pos.x,
             top: pos.y,
-            width: down ? 30 : 38,
-            height: down ? 30 : 38,
+            width: down ? 22 : 28,
+            height: down ? 22 : 28,
             transform: 'translate(-50%, -50%)',
             background: down ? 'rgb(40 40 40 / 0.45)' : 'rgb(60 60 60 / 0.28)',
             border: '1.5px solid rgb(255 255 255 / 0.65)',
