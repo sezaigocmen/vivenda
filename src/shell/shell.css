@@ -94,3 +94,26 @@ body {
   transform: scale(0.97);
   opacity: 0.85;
 }
+
+/* Masaüstü çerçevesinde parmak imleci (TouchCursor): gerçek fare imleci gizlenir */
+.touch-frame,
+.touch-frame * {
+  cursor: none !important;
+}
+.touch-ripple {
+  width: 36px;
+  height: 36px;
+  margin: -18px 0 0 -18px;
+  border: 2px solid rgb(80 80 80 / 0.45);
+  animation: touch-ripple 0.45s ease-out forwards;
+}
+@keyframes touch-ripple {
+  from {
+    transform: scale(0.6);
+    opacity: 1;
+  }
+  to {
+    transform: scale(1.9);
+    opacity: 0;
+  }
+}

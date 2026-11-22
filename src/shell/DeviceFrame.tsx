@@ -2,10 +2,11 @@
  * Masaüstünde uygulamayı saran iPhone çerçevesi (393×852, iPhone 15/16 ölçüsü).
  * Pencere küçükse çerçeve orantılı küçülür.
  */
-import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { ShellProvider } from './context'
 import { StatusBar } from './StatusBar'
 import { ToastHost } from './toast'
+import { TouchCursor } from './TouchCursor'
 
 const SCREEN_W = 393
 const SCREEN_H = 852
@@ -26,6 +27,7 @@ function useFitScale() {
 
 export function DeviceFrame({ children }: { children: ReactNode }) {
   const scale = useFitScale()
+  const screen = useRef<HTMLDivElement>(null)
 
   const screenVars = {
     '--safe-top': '59px',
@@ -52,7 +54,7 @@ export function DeviceFrame({ children }: { children: ReactNode }) {
         <span className="absolute -left-[3px] top-[298px] h-[60px] w-[3px] rounded-l bg-[#3a3a3c]" />
         <span className="absolute -right-[3px] top-[250px] h-[96px] w-[3px] rounded-r bg-[#3a3a3c]" />
 
-        <div className="relative h-full w-full overflow-hidden" style={{ ...screenVars, borderRadius: 52, transform: 'translateZ(0)' }}>
+        <div ref={screen} className="touch-frame relative h-full w-full overflow-hidden" style={{ ...screenVars, borderRadius: 52, transform: 'translateZ(0)' }}>
           <ShellProvider value={{ mode: 'desktop', scale }}>
             <div className="app-surface">
               {children}
@@ -65,6 +67,7 @@ export function DeviceFrame({ children }: { children: ReactNode }) {
             <StatusBar color="var(--status-fg, #000)" />
             <div className="absolute left-1/2 top-[11px] h-[37px] w-[125px] -translate-x-1/2 rounded-full bg-black" />
           </div>
+          <TouchCursor screen={screen} scale={scale} />
           <div className="pointer-events-none absolute bottom-[8px] left-1/2 z-[1000] h-[5px] w-[139px] -translate-x-1/2 rounded-full" style={{ background: "var(--status-fg, #000)", opacity: 0.85 }} />
         </div>
       </div>
