@@ -23,6 +23,35 @@ function scrollParent(el: Element | null, root: Element, axis: 'x' | 'y'): HTMLE
   return null
 }
 
+/** Snap noktaları arasından, bırakış hızına göre hedefi seçip yumuşakça kaydırır */
+function snapTo(el: HTMLElement, axis: 'x' | 'y', v: number, orig: string) {
+  const er = el.getBoundingClientRect()
+  const cs = getComputedStyle(el)
+  const padStart = parseFloat(axis === 'x' ? cs.scrollPaddingLeft : cs.scrollPaddingTop) || 0
+  const cur = axis === 'x' ? el.scrollLeft : el.scrollTop
+  const max = axis === 'x' ? el.scrollWidth - el.clientWidth : el.scrollHeight - el.clientHeight
+  const points: number[] = []
+  for (const c of Array.from(el.children) as HTMLElement[]) {
+    const align = getComputedStyle(c).scrollSnapAlign.split(' ').pop() || 'none'
+    if (align === 'none') continue
+    const cr = c.getBoundingClientRect()
+    const off = axis === 'x' ? cr.left - er.left : cr.top - er.top
+    const size = axis === 'x' ? cr.width : cr.height
+    const view = axis === 'x' ? er.width : er.height
+    const p = align === 'center' ? cur + off + size / 2 - view / 2 : align === 'end' ? cur + off + size - view : cur + off - padStart
+    points.push(Math.max(0, Math.min(max, p)))
+  }
+  const projected = cur + v * 220
+  let target = points.length ? points.reduce((a, b) => (Math.abs(b - projected) < Math.abs(a - projected) ? b : a)) : cur
+  // Küçük bir fiske de bir sonraki karta geçirsin
+  if (points.length && Math.abs(target - cur) < 2 && Math.abs(v) > 0.25) {
+    const next = v > 0 ? points.filter((p) => p > cur + 2).sort((a, b) => a - b)[0] : points.filter((p) => p < cur - 2).sort((a, b) => b - a)[0]
+    if (next !== undefined) target = next
+  }
+  el.scrollTo({ [axis === 'x' ? 'left' : 'top']: target, behavior: 'smooth' })
+  setTimeout(() => (el.style.scrollSnapType = orig), 520)
+}
+
 /** Kendi sürükleme hareketi olan öğeler (hikâye kaydırma, sheet tutamacı, kenardan geri kaydırma) */
 const OWN_GESTURE = '[style*="touch-action"], .touch-none, [data-own-gesture]'
 
@@ -36,7 +65,7 @@ export function TouchCursor({ screen, scale }: { screen: RefObject<HTMLDivElemen
   useEffect(() => {
     const root = screen.current
     if (!root) return
-    let drag: { x: number; y: number; t: number; target: Element; sx: HTMLElement | null; sy: HTMLElement | null; axis: 'x' | 'y' | null; vx: number; vy: number; moved: boolean } | null = null
+    let drag: { x: number; y: number; t: number; target: Element; sx: HTMLElement | null; sy: HTMLElement | null; axis: 'x' | 'y' | null; vx: number; vy: number; moved: boolean; snapEl?: HTMLElement; snapOrig?: string } | null = null
     let raf = 0
 
     const local = (e: PointerEvent) => {
@@ -59,6 +88,13 @@ export function TouchCursor({ screen, scale }: { screen: RefObject<HTMLDivElemen
         if (!drag.axis) {
           drag = null
           return
+        }
+        // Mıknatıslı (scroll-snap) sıralarda sürüklerken mıknatısı kapat; bırakınca en yakın karta otur
+        const el = drag.axis === 'y' ? drag.sy : drag.sx
+        if (el && getComputedStyle(el).scrollSnapType !== 'none') {
+          drag.snapEl = el
+          drag.snapOrig = el.style.scrollSnapType
+          el.style.scrollSnapType = 'none'
         }
       }
       drag.moved = true
@@ -101,6 +137,11 @@ export function TouchCursor({ screen, scale }: { screen: RefObject<HTMLDivElemen
       }
       window.addEventListener('click', swallow, { capture: true, once: true })
       setTimeout(() => window.removeEventListener('click', swallow, { capture: true }), 50)
+      // Mıknatıslı sıra: hız yönünde en yakın karta yumuşakça otur
+      if (d.snapEl) {
+        snapTo(d.snapEl, d.axis!, d.axis === 'y' ? d.vy : d.vx, d.snapOrig ?? '')
+        return
+      }
       // Atalet: parmağı bırakınca bir süre daha kayar
       let v = d.axis === 'y' ? d.vy : d.vx
       const el = d.axis === 'y' ? d.sy : d.sx
